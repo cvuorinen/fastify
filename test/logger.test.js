@@ -27,19 +27,15 @@ function createDeferredPromise () {
   return promise
 }
 
-function createTempFile (t) {
-  const location = path.join(os.tmpdir(), `sonic-boom-${process.pid}-${process.hrtime().toString()}-${count++}`)
-
-  t.teardown(() => {
-    queueMicrotask(() => {
-      // ensure we do the last
-      try {
-        fs.unlinkSync(location)
-      } catch { }
-    })
-  })
-
-  return location
+function createTempFile () {
+  const file = path.join(os.tmpdir(), `sonic-boom-${process.pid}-${process.hrtime().toString()}-${count++}`)
+  function cleanup () {
+    console.log('cleanup')
+    try {
+      fs.unlinkSync(file)
+    } catch { }
+  }
+  return { file, cleanup }
 }
 
 function request (url, cleanup = () => {}) {
@@ -1282,14 +1278,14 @@ test('file option', async (t) => {
     { reqId: /req-/, res: { statusCode: 200 }, msg: 'request completed' }
   ]
   t.plan(lines.length + 3)
-  const file = createTempFile(t)
+  const { file, cleanup } = createTempFile(t)
 
   const fastify = Fastify({
     logger: { file }
   })
-  // we need to end the sonic-boom stream
-  // because we never been able to meet the minLength with flush
-  t.teardown(fastify.log[streamSym].end.bind(fastify.log[streamSym]))
+  // cleanup the file after sonic-boom closed
+  // otherwise we may face racing condition
+  fastify.log[streamSym].once('close', cleanup)
   t.teardown(fastify.close.bind(fastify))
 
   fastify.get('/', function (req, reply) {
