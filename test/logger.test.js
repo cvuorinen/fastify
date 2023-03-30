@@ -57,13 +57,6 @@ before(async function () {
   [localhost, localhostForURL] = await helper.getLoopbackHost()
 })
 
-teardown(() => {
-  // we check once after 3s if node is not exit properly
-  setTimeout(() => {
-    require('why-is-node-running')()
-  }, 3000).unref()
-})
-
 test('defaults to info level', async (t) => {
   const lines = [
     { reqId: /req-/, req: { method: 'GET' }, msg: 'incoming request' },
@@ -1290,6 +1283,11 @@ test('file option', async (t) => {
     logger: { file }
   })
   t.teardown(() => {
+    // we check once after 3s if node is not exit properly
+    setTimeout(() => {
+      require('why-is-node-running')()
+    }, 3000).unref()
+
     // cleanup the file after sonic-boom closed
     // otherwise we may face racing condition
     fastify.log[streamSym].once('close', cleanup)
