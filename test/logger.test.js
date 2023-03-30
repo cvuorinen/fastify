@@ -9,15 +9,11 @@ const pino = require('pino')
 const path = require('path')
 const os = require('os')
 const fs = require('fs')
+const { streamSym } = require('pino/lib/symbols')
 
 const helper = require('./helper')
 const { FST_ERR_LOG_INVALID_LOGGER } = require('../lib/errors')
 const { once, on } = require('stream')
-const log = require('why-is-node-running')
-
-setInterval(() => {
-  log()
-}, 1000).unref()
 
 let count = 0
 let localhost
@@ -34,11 +30,11 @@ function createDeferredPromise () {
 function createTempFile (t) {
   const location = path.join(os.tmpdir(), `sonic-boom-${process.pid}-${process.hrtime().toString()}-${count++}`)
 
-  queueMicrotask(() => {
-    // ensure we do the last
-    t.teardown(() => {
+  t.teardown(() => {
+    queueMicrotask(() => {
+      // ensure we do the last
       try {
-        fs.unlinkSync(localhost)
+        fs.unlinkSync(location)
       } catch { }
     })
   })
@@ -1291,7 +1287,9 @@ test('file option', async (t) => {
   const fastify = Fastify({
     logger: { file }
   })
-  t.teardown(fastify.log.flush.bind(fastify.log))
+  // we need to end the sonic-boom stream
+  // because we never been able to meet the minLength with flush
+  t.teardown(fastify.log[streamSym].end.bind(fastify.log[streamSym]))
   t.teardown(fastify.close.bind(fastify))
 
   fastify.get('/', function (req, reply) {
