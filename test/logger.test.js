@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, teardown, before } = require('tap')
+const { test, before } = require('tap')
 const http = require('http')
 const stream = require('stream')
 const split = require('split2')
