@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, before } = require('tap')
+const { test, teardown, before } = require('tap')
 const http = require('http')
 const stream = require('stream')
 const split = require('split2')
@@ -55,6 +55,13 @@ function request (url, cleanup = () => {}) {
 
 before(async function () {
   [localhost, localhostForURL] = await helper.getLoopbackHost()
+})
+
+teardown(() => {
+  // we check once after 3s if node is not exit properly
+  setTimeout(() => {
+    require('why-is-node-running')()
+  }, 3000).unref()
 })
 
 test('defaults to info level', async (t) => {
