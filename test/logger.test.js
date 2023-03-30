@@ -30,7 +30,6 @@ function createDeferredPromise () {
 function createTempFile () {
   const file = path.join(os.tmpdir(), `sonic-boom-${process.pid}-${process.hrtime().toString()}-${count++}`)
   function cleanup () {
-    console.log('cleanup')
     try {
       fs.unlinkSync(file)
     } catch { }
@@ -1283,9 +1282,16 @@ test('file option', async (t) => {
   const fastify = Fastify({
     logger: { file }
   })
-  // cleanup the file after sonic-boom closed
-  // otherwise we may face racing condition
-  fastify.log[streamSym].once('close', cleanup)
+  t.teardown(() => {
+    // cleanup the file after sonic-boom closed
+    // otherwise we may face racing condition
+    fastify.log[streamSym].once('close', cleanup)
+    // we must flush the stream ourself
+    // otherwise buffer may whole sonic-boom
+    fastify.log[streamSym].flushSync()
+    // end after flushing to actually close file
+    fastify.log[streamSym].end()
+  })
   t.teardown(fastify.close.bind(fastify))
 
   fastify.get('/', function (req, reply) {
