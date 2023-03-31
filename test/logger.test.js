@@ -19,6 +19,11 @@ let count = 0
 let localhost
 let localhostForURL
 
+// we check once after 3s if node is not exit properly
+setInterval(() => {
+  require('why-is-node-running')()
+}, 1000).unref()
+
 function createDeferredPromise () {
   const promise = {}
   promise.promise = new Promise(function (resolve) {
@@ -1283,11 +1288,6 @@ test('file option', async (t) => {
     logger: { file }
   })
   t.teardown(() => {
-    // we check once after 3s if node is not exit properly
-    setTimeout(() => {
-      require('why-is-node-running')()
-    }, 3000).unref()
-
     // cleanup the file after sonic-boom closed
     // otherwise we may face racing condition
     fastify.log[streamSym].once('close', cleanup)
