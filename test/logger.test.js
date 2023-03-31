@@ -19,11 +19,6 @@ let count = 0
 let localhost
 let localhostForURL
 
-// we check once after 3s if node is not exit properly
-setInterval(() => {
-  require('why-is-node-running')()
-}, 1000).unref()
-
 function createDeferredPromise () {
   const promise = {}
   promise.promise = new Promise(function (resolve) {
