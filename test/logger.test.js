@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, before } = require('tap')
+const { plan, test, before } = require('tap')
 const http = require('http')
 const stream = require('stream')
 const split = require('split2')
@@ -57,6 +57,8 @@ function request (url, cleanup = () => {}) {
   })
   return promise.promise
 }
+
+plan(46)
 
 before(async function () {
   [localhost, localhostForURL] = await helper.getLoopbackHost()
