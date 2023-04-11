@@ -31,7 +31,9 @@ function createTempFile () {
   const file = path.join(os.tmpdir(), `sonic-boom-${process.pid}-${process.hrtime().toString()}-${count++}`)
   function cleanup () {
     try {
+      console.log('before cleanup')
       fs.unlinkSync(file)
+      console.log('cleanup done')
     } catch { }
   }
   return { file, cleanup }
